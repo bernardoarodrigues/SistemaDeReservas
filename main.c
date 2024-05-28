@@ -24,27 +24,28 @@ void lerVoo(Voo *voo) {
     FILE *arquivoPtr;
     char arquivo[1000] = NULL;
 
-    arquivoPtr = fopen("voo.txt", "r");
-    fgets(arquivo, 1000, arquivoPtr);
+    if(arquivoPtr = fopen("voo.txt", "r") != NULL) {
+        fgets(arquivo, 1000, arquivoPtr);
 
-    if(strlen(arquivo) > 0) {
-        voo = calloc(1, sizeof(Voo));
-        voo->idVoo = calloc(5, sizeof(char));
-        voo->origem = calloc(4, sizeof(char));
-        voo->destino = calloc(4, sizeof(char));
+        if(strlen(arquivo) > 0) {
+            voo = calloc(1, sizeof(Voo));
+            voo->idVoo = calloc(5, sizeof(char));
+            voo->origem = calloc(4, sizeof(char));
+            voo->destino = calloc(4, sizeof(char));
 
-        strcpy(voo->idVoo, strtok(arquivo, ","));
-        strcpy(voo->origem, strtok(NULL, ","));
-        strcpy(voo->destino, strtok(NULL, ","));
-        voo->assentosTotais = atoi(strtok(NULL, ","));
-        voo->assentosOcupados = atoi(strtok(NULL, ","));
-        voo->dia = atoi(strtok(NULL, ","));
-        voo->mes = atoi(strtok(NULL, ","));
-        voo->ano = atoi(strtok(NULL, ","));
-        voo->status = atoi(strtok(NULL, ","));
-        voo->valorEconomica = atof(strtok(NULL, ","));
-        voo->valorExecutiva = atof(strtok(NULL, ","));
-        voo->valorTotal = atof(strtok(NULL, ","));
+            strcpy(voo->idVoo, strtok(arquivo, ","));
+            strcpy(voo->origem, strtok(NULL, ","));
+            strcpy(voo->destino, strtok(NULL, ","));
+            voo->assentosTotais = atoi(strtok(NULL, ","));
+            voo->assentosOcupados = atoi(strtok(NULL, ","));
+            voo->dia = atoi(strtok(NULL, ","));
+            voo->mes = atoi(strtok(NULL, ","));
+            voo->ano = atoi(strtok(NULL, ","));
+            voo->status = atoi(strtok(NULL, ","));
+            voo->valorEconomica = atof(strtok(NULL, ","));
+            voo->valorExecutiva = atof(strtok(NULL, ","));
+            voo->valorTotal = atof(strtok(NULL, ","));
+        }
     }
 }
 
