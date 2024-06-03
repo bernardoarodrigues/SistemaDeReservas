@@ -22,7 +22,7 @@ void fechamentoDia();
 void fechamentoVoo();
 void lerVoo(Voo* voo);
 void salvarVoo(Voo* voo);
-void lerReservas(Reserva** reservas);
+Reserva** lerReservas(Reserva** reservas);
 void salvarReservas(Reserva** reservas);
 
 void aberturaVoo() {
