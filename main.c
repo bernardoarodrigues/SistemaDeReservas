@@ -1,20 +1,56 @@
+/*
+    Autores: 
+        - Bernardo Alexandre Alves Rodrigues - 15442936
+        - Gabriel Campanelli Iamato - N°USP: 15452920
+        - Gabriel Phelippe Prado - 15453730
+*/
+
+// Defines
+#define _GNU_SOURCE
+
+// Bibliotecas
 #include <stdio.h>
-#include <stdlib.h>
+#include <stdlib.h> 
 #include <string.h>
 
-const char TRACO[] = "--------------------------------------------------\n";
+// Constantes
+const char LINHA[] = "--------------------------------------------------\n";
 
+/*
+Struct referente ao voo
+    - idVoo: Identificador do voo
+    - origem: Aeroporto de origem do voo
+    - destino: Aeroporto de destino do voo
+    - assentosTotais: Quantidade de assentos no Total
+    - assentosOcupados: Quantidade de assentos ocupados
+    - dia: Dia do voo
+    - mes: Mês do voo
+    - ano: Ano do voo
+    - valorEconomica: Valor da passagem na classe econômica
+    - valorExecutiva: Valor da passagem na classe executiva
+    - valorTotal: Valor total arrecadado com as reservas
+    - status: 0 = Voo aberto 1 = Voo fechado
+*/
 typedef struct {
 	char *idVoo, *origem, *destino; 
-	int assentosTotais, assentosOcupados, dia, mes, ano, status; // 0=aberto 1=fechado
+	int assentosTotais, assentosOcupados, dia, mes, ano, status; 
 	float valorEconomica, valorExecutiva, valorTotal;
 } Voo;
 
+/*
+Struct referente às reservas
+    -nome: Primeiro nome do passageiro
+    -sobrenome: Sobrenome do passageiro
+    -cpf: CPF do passageiro
+    -assento: Id do assento reservado
+    -classe: 0 = economica 1 = executiva
+*/
 typedef struct {
 	char *nome, *sobrenome, *cpf, *assento;
-    int classe; // 0=economica 1=executiva
+    int classe; 
 } Reserva;
 
+// Protótipos das funções
 void aberturaVoo(Voo *voo, Reserva ***reservas);
 void realizarReserva(Voo *voo, Reserva ***reservas);
 void consultarReserva(Voo *voo, Reserva ***reservas);
@@ -26,55 +62,84 @@ void lerVoo(Voo *voo);
 void salvarVoo(Voo *voo);
 void lerReservas(Reserva*** reservas);
 void salvarReservas(Voo *voo, Reserva** reservas);
+void calculaValortotal(Voo *voo, Reserva ***reservas);
 
+/*
+    Objetivo: realizar a abertura de um voo, armazenando em uma struct Voo
+    Parâmetros: endereço da struct Voo, endereço do array de Reservas
+*/
 void aberturaVoo(Voo *voo, Reserva ***reservas) {
+    // Obtém parâmetros
     char *buffer = NULL;
     size_t tamanhoBuffer = 0;
-
     getline(&buffer, &tamanhoBuffer, stdin);
+    buffer++;
 
-    voo->idVoo="-"; voo->origem="-"; voo->destino="-";
+    // Atribui os valores da struct Voo de acordo com os valores inicializados (string com "-" e inteiros com -1)
+    strcpy(voo->idVoo, "-"); strcpy(voo->origem, "-"); strcpy(voo->destino, "-");
     voo->dia=-1; voo->mes=-1; voo->ano=-1;
+
+    // Zera assentos ocupados e status 0 (aberto)
     voo->assentosTotais=atoi(strtok(buffer, " ")); voo->assentosOcupados=0; voo->status=0;
     voo->valorEconomica=atoi(strtok(NULL, " ")); voo->valorExecutiva=atoi(strtok(NULL, "\n")); voo->valorTotal=0.0;
 
-    for(int i=0; i<voo->assentosOcupados; i++) {
-        free(&((*reservas)[i]->nome));
-        free(&((*reservas)[i]->sobrenome));
-        free(&((*reservas)[i]->cpf));
-        free(&((*reservas)[i]->assento));
-        free(&((*reservas)[i]));
+    // Desaloca memória e "limpa" array de reservas
+    if(*reservas != NULL) {
+        for(int i=0; i<voo->assentosOcupados; i++) {
+            free(&((*reservas)[i]->nome));
+            free(&((*reservas)[i]->sobrenome));
+            free(&((*reservas)[i]->cpf));
+            free(&((*reservas)[i]->assento));
+            free(&((*reservas)[i]));
+        }
+        free(*reservas);
+        *reservas=NULL;
     }
-    free(*reservas);
-    *reservas=NULL;
 }
 
+/*
+    Objetivo: realizar a reserva de um assento, armazenando em um espaço do array de structs reservas
+    Parâmetros: endereço da struct Voo, endereço do array de Reservas
+*/
 void realizarReserva(Voo *voo, Reserva ***reservas) {
-    voo->assentosOcupados++;
-    *reservas = (Reserva**)realloc(*reservas, voo->assentosOcupados*sizeof(Reserva));
-
+    // Obtém parâmetros
     char *buffer = NULL;
     size_t tamanhoBuffer = 0;
-
     getline(&buffer, &tamanhoBuffer, stdin);
+    buffer++;
 
-    Reserva *reserva = (*reservas)[voo->assentosOcupados-1];
+    // Aumenta 1 em assentos ocupados e realoca o espaço de memória para o array de reservas
+    voo->assentosOcupados++;
+    *reservas = (Reserva**)realloc(*reservas, voo->assentosOcupados*sizeof(Reserva*));
     
+    // Armazena espaço para reserva
+    Reserva *reserva = (Reserva*) malloc(1 *sizeof(Reserva));
+
+    // Aloca memória para strings da reserva
     reserva->nome = calloc(50, sizeof(char));
     reserva->sobrenome = calloc(50, sizeof(char));
     reserva->cpf = calloc(15, sizeof(char));
     reserva->assento = calloc(10, sizeof(char));
 
+    // Obtém as informações do buffer e armazena nos campos da struct reserva
     strcpy(reserva->nome, strtok(buffer, " "));  
     strcpy(reserva->sobrenome, strtok(NULL, " "));
     strcpy(reserva->cpf, strtok(NULL, " "));
 
+    // Realoca memória utilizada nas strings para o mínimo possível
+    reserva->nome = realloc(reserva->nome, (strlen(reserva->nome)+1)*sizeof(char));
+    reserva->sobrenome = realloc(reserva->sobrenome, (strlen(reserva->sobrenome)+1)*sizeof(char));
+    reserva->assento = realloc(reserva->assento, (strlen(reserva->assento)+1)*sizeof(char));
+    
+    // Altera os valores do dia, mês, ano e idVoo caso ainda não tenham sido obtidos
     if(voo->dia==-1){
         voo->dia = atoi(strtok(NULL, " "));
-        voo->mes, atoi(strtok(NULL, " "));
-        voo->ano, atoi(strtok(NULL, " "));
+        voo->mes = atoi(strtok(NULL, " "));
+        voo->ano = atoi(strtok(NULL, " "));
+
         strcpy(voo->idVoo, strtok(NULL, " "));
     }
+    // Caso contrário, ignora-os
     else{
         strtok(NULL, " ");
         strtok(NULL, " ");
@@ -82,25 +147,47 @@ void realizarReserva(Voo *voo, Reserva ***reservas) {
         strtok(NULL, " ");
     }
 
+    // Recebe os valores de assento e classe e atualiza o valor total obtido
     strcpy(reserva->assento, strtok(NULL, " "));
-    if(!strcmp(strtok(NULL, " "), "economica")) reserva->classe=0;
-    else reserva->classe = 1;
+    if(!strcmp(strtok(NULL, " "), "economica")) {
+        reserva->classe=0;
+        voo->valorTotal += voo->valorEconomica;
+    }
+    else {
+        reserva->classe = 1;
+        voo->valorTotal += voo->valorExecutiva;
+    }
+
+    // Ignora o valor da reserva, pois já será calculado no final de acordo com a classe
     strtok(NULL, " ");
-    
-    if(voo->origem=="-") {
+
+    // Recebe os valores de origem e destino, caso ainda não tenham sido recebidos
+    if(!strcmp(voo->origem, "-")) {
         strcpy(voo->origem, strtok(NULL, " "));
         strcpy(voo->destino, strtok(NULL, "\n"));
-    } else {
+    }
+    // Caso contrário, ignora-os
+    else {
         strtok(NULL, " ");
         strtok(NULL, "\n");
     }
+
+    // Adiciona reserva ao array
+    (*reservas)[voo->assentosOcupados-1] = reserva;
 }
 
+/*
+    Objetivo: consultar a reserva de um assento pelo CPF e imprimir suas informações
+    Parâmetros: endereço da struct Voo, endereço do array de Reservas
+*/
 void consultarReserva(Voo *voo, Reserva ***reservas) {
+    // Obtém CPF
     char cpf[15];
     scanf(" %s", cpf);
-    
+
+    // Percorre o array de reservas
     for(int i = 0; i<voo->assentosOcupados; i++) {
+        // Caso tenha encontrado o CPF, imprime as informações da reserva
         if(!strcmp(cpf, (*reservas)[i]->cpf)) {
             printf("%s\n", (*reservas)[i]->cpf);
             printf("%s %s\n", (*reservas)[i]->nome, (*reservas)[i]->sobrenome);
@@ -114,90 +201,146 @@ void consultarReserva(Voo *voo, Reserva ***reservas) {
             printf("Classe: %s\n", (*reservas)[i]->classe ? "economica" : "executiva");
             printf("Trecho: %s %s\n", voo->origem, voo->destino);
             printf("Valor: %.2f\n", (*reservas)[i]->classe ? voo->valorEconomica : voo->valorExecutiva);
-            printf(TRACO);
+            printf(LINHA);
             break;
         }
     }
 }   
 
+/*
+    Objetivo: modificar a reserva de um assento, alterando as informações da reserva
+    Parâmetros: endereço da struct Voo, endereço do array de Reservas
+*/
 void modificarReserva(Voo *voo, Reserva ***reservas) {
+    // Obtém parâmetros
     char *buffer = NULL;
     size_t tamanhoBuffer = 0;
-
     getline(&buffer, &tamanhoBuffer, stdin);
+    buffer++;
 
-    for (int i=0; i<voo->assentosOcupados; i++) {
-        if(!strcmp(strtok(buffer, " "), (*reservas)[i]->cpf)) {
-            strcpy((*reservas)[i]->nome, strtok(NULL, " "));
-            strcpy((*reservas)[i]->sobrenome, strtok(NULL, " "));
-	        strcpy((*reservas)[i]->cpf, strtok(NULL, " "));
-	        strcpy((*reservas)[i]->assento, strtok(NULL, "\n"));
+    // Percorre o array de reservas
+    int pos=0;
+    for (; pos < voo->assentosOcupados; pos++) {
+        // Caso tenha encontrado o CPF, modifica as informações da reserva
+        if(!strcmp(strtok(buffer, " "), (*reservas)[pos]->cpf)) {
+            strcpy((*reservas)[pos]->nome, strtok(NULL, " "));
+            strcpy((*reservas)[pos]->sobrenome, strtok(NULL, " "));
+	        strcpy((*reservas)[pos]->cpf, strtok(NULL, " "));
+	        strcpy((*reservas)[pos]->assento, strtok(NULL, "\n"));
             break;
         }
     }
+
+    // Imprime as informações da reserva modificada
+    printf("Reserva Modificada:\n%s\n%s %s\n%d/%d/%d\nVoo: %s\nAssento: %s\n", (*reservas)[pos]->cpf, (*reservas)[pos]->nome, (*reservas)[pos]->sobrenome, (voo->dia), (voo->mes), (voo->ano), voo->idVoo, (*reservas)[pos]->assento);
+    if((*reservas)[pos]->classe) printf("Classe: executiva\n"); else printf("Classe: economica\n");
+    printf("Trecho: %s %s\nValor: %.2f\n", voo->origem, voo->destino, (*reservas)[pos]->classe ? voo->valorExecutiva : voo->valorEconomica);
 }
 
+/*
+    Objetivo: cancelar a reserva de um assento, retirando do array de reservas
+    Parâmetros: endereço da struct Voo, endereço do array de Reservas
+*/
 void cancelarReserva(Voo *voo, Reserva ***reservas) {
-    int i=0;
-
+    // Obtém CPF
     char cpf[15];
     scanf(" %s", cpf);
 
-    for (i=0; i<voo->assentosOcupados; i++){
-        if(!strcmp(cpf, (*reservas)[i]->cpf)){
+    // Procura o cpf no array de reservas e acha sua posição
+    int pos=0;
+    for (; pos<voo->assentosOcupados; pos++){
+        if(!strcmp(cpf, (*reservas)[pos]->cpf)){
             break;
         } 
     }
-
-    voo->valorTotal -= (*reservas)[i]->classe ? voo->valorEconomica : voo->valorExecutiva;
     
-    for(int j=i; j<voo->assentosOcupados-1; j++){
+    // Diminui do valor total do Voo o valor da reserva cancelada
+    voo->valorTotal -= (*reservas)[pos]->classe ? voo->valorEconomica : voo->valorExecutiva;
+    
+    // Desloca as posições do array de reservas para a esquerda, de forma a retirar a reserva cancelada
+    for(int j=pos; j<voo->assentosOcupados-1; j++){
         (*reservas)[j]=(*reservas)[j+1];
     }
 
+    // Diminui em 1 a quantidade de assentos ocupados
     voo->assentosOcupados--;
+
+    // Realoca o espaço para reservas
     *reservas = (Reserva**)realloc(*reservas, voo->assentosOcupados*sizeof(Reserva*));
 }
 
+/*
+    Objetivo: imprimir o fechamento do dia, com a quantidade de reservas e o valor total arrecadado
+    Parâmetros: endereço da struct Voo, endereço do array de Reservas
+*/
 void fechamentoDia(Voo *voo) {
+    printf(LINHA);
     printf("Fechamento do dia:\n");
     printf("Quantidade de reservas: %d\n", voo->assentosOcupados);
     printf("Posicao: %.2f\n", voo->valorTotal);
-    printf(TRACO);
+    printf(LINHA);
 }
 
+/*
+    Objetivo: imprimir o fechamento do voo, com as informações de todas as reservas e o valor total arrecadado
+    Parâmetros: endereço da struct Voo, endereço do array de Reservas
+*/
 void fechamentoVoo(Voo *voo, Reserva ***reservas) {
+    // Define o status do voo como fechado
     voo->status=1;
+
+    // Imprime informações
+    printf(LINHA);
     printf("Voo Fechado!\n\n");
     for(int i=0; i<voo->assentosOcupados; i++) {
         printf("%s\n%s %s\n%s\n\n", (*reservas)[i]->cpf, (*reservas)[i]->nome, (*reservas)[i]->sobrenome, (*reservas)[i]->assento);
     }
     printf("Valor Total: %.2f\n", voo->valorTotal);
-    printf(TRACO);
+    printf(LINHA);
 }
 
+/*
+    Objetivo: pegar as informações do arquivo "voo.txt" e armazenar na struct Voo
+    Parâmetros: endereço da struct Voo
+*/
 void lerVoo(Voo *voo) {
+    // Cria um ponteiro para o arquivo
     FILE *arquivoPtr;
-    char *arquivo = NULL;
-    size_t tamanhoArquivo = 0;
-    
+    char *linha = NULL;
+    size_t tamanhoLinha = 0;
+
+    // Abre o arquivo para leitura
     if((arquivoPtr = fopen("./voo.txt", "r")) != NULL) {
+        // Obtém primeiro caractere do arquivo
         int c = fgetc(arquivoPtr);
+
+        /* Se o arquivo estiver vazio, define as informações da struct Voo como 
+        "-": para strings
+        -1: para inteiros
+        -1.0: para floats
+        OBS: valores de inicialização, que serão sobrescritos posteriormente */
         if (c == EOF) {
             voo->idVoo = calloc(5, sizeof(char));
             voo->origem = calloc(4, sizeof(char));
             voo->destino = calloc(4, sizeof(char));
-            voo->idVoo="-"; voo->origem="-"; voo->destino="-";
+            strcpy(voo->idVoo, "-"); strcpy(voo->origem, "-"); strcpy(voo->destino, "-");
             voo->assentosTotais=-1; voo->assentosOcupados=-1; voo->dia=-1; voo->mes=-1; voo->ano=-1; voo->status=-1;
             voo->valorEconomica=-1.0; voo->valorExecutiva=-1.0; voo->valorTotal=-1.0;
-        } else {
+        } 
+        // Caso o arquivo exista
+        else { 
+            // Reposiciona o ponteiro para o início do arquivo
             rewind(arquivoPtr);
-            if(getline(&arquivo, &tamanhoArquivo, arquivoPtr) != -1) {
+
+            // Obtém as informações do voo e armazena na struct Voo
+            if(getline(&linha, &tamanhoLinha, arquivoPtr) != -1) {
+                // Aloca memória para strings
                 voo->idVoo = calloc(5, sizeof(char));
                 voo->origem = calloc(4, sizeof(char));
                 voo->destino = calloc(4, sizeof(char));
 
-                strcpy(voo->idVoo, strtok(arquivo, ","));
+                // Obtém as informações separadas por ","
+                strcpy(voo->idVoo, strtok(linha, ","));
                 strcpy(voo->origem, strtok(NULL, ","));
                 strcpy(voo->destino, strtok(NULL, ","));
                 voo->assentosTotais = atoi(strtok(NULL, ","));
@@ -211,18 +354,37 @@ void lerVoo(Voo *voo) {
                 voo->valorTotal = atof(strtok(NULL, ","));
             }
         }
-    } 
 
-    fclose(arquivoPtr);
+        // Fecha o arquivo
+        fclose(arquivoPtr);
+    } 
+    // Caso o arquivo não exista, cria um novo e define as informações iniciais
+    else {
+        if((arquivoPtr = (FILE*)fopen("./voo.txt", "w")) != NULL) {
+            voo->idVoo = calloc(5, sizeof(char));
+            voo->origem = calloc(4, sizeof(char));
+            voo->destino = calloc(4, sizeof(char));
+            strcpy(voo->idVoo, "-"); strcpy(voo->origem, "-"); strcpy(voo->destino, "-");
+            voo->assentosTotais=-1; voo->assentosOcupados=-1; voo->dia=-1; voo->mes=-1; voo->ano=-1; voo->status=-1;
+            voo->valorEconomica=-1.0; voo->valorExecutiva=-1.0; voo->valorTotal=-1.0;
+        }
+    }
 }
 
+/*
+    Objetivo: salvar as informações da struct Voo no arquivo "voo.txt"
+    Parâmetros: endereço da struct Voo
+*/
 void salvarVoo(Voo *voo) {
+    // Cria um ponteiro para o arquivo
     FILE *arquivoPtr;
 
-    if((arquivoPtr = fopen("./voo.txt", "w")) != NULL) {
-        fprintf(arquivoPtr, voo->idVoo); fprintf(arquivoPtr, ",");
-        fprintf(arquivoPtr, voo->origem); fprintf(arquivoPtr, ",");
-        fprintf(arquivoPtr, voo->destino); fprintf(arquivoPtr, ",");
+    // Abre o arquivo voo.txt no modo escrita
+    if((arquivoPtr = (FILE*)fopen("./voo.txt", "w")) != NULL) {
+        // Armazena as informações separando-as por ","
+        fprintf(arquivoPtr,"%s", voo->idVoo); fprintf(arquivoPtr, ",");
+        fprintf(arquivoPtr,"%s", voo->origem); fprintf(arquivoPtr, ",");
+        fprintf(arquivoPtr,"%s", voo->destino); fprintf(arquivoPtr, ",");
         fprintf(arquivoPtr, "%d", voo->assentosTotais); fprintf(arquivoPtr, ",");
         fprintf(arquivoPtr, "%d", voo->assentosOcupados); fprintf(arquivoPtr, ",");
         fprintf(arquivoPtr, "%d", voo->dia); fprintf(arquivoPtr, ",");
@@ -233,89 +395,145 @@ void salvarVoo(Voo *voo) {
         fprintf(arquivoPtr, "%.2f", voo->valorExecutiva); fprintf(arquivoPtr, ",");
         fprintf(arquivoPtr, "%.2f", voo->valorTotal);
 
+        // Fecha arquivo
         fclose(arquivoPtr);
+    } 
+    // Caso o arquivo não exista, alerta erro
+    else {
+        printf("Erro ao abrir arquivo");
+        exit(1);
     }
 }
 
+/*
+    Objetivo: pegar as informações do arquivo "reservas.txt" e armazenar em um array de Reservas
+    Parâmetros: endereço do array de Reservas
+*/
 void lerReservas(Reserva ***reservas) {
+    // Cria um ponteiro do arquivo
     FILE *arquivoPtr;
     char *arquivo = NULL;
     size_t tamanhoArquivo = 0;
-    
+
+    // Quantidade de reservas
     int quantidade=0;
 
-    if((arquivoPtr = fopen("./reservas.txt", "r")) != NULL) {
+    // Caso o arquivo exista, abre-o arquivo para leitura
+    if((arquivoPtr = (FILE*)fopen("./reservas.txt", "r")) != NULL) {
         int c = fgetc(arquivoPtr);
-        if (c != EOF) {
-            rewind(arquivoPtr);
-            while(getline(&arquivo, &tamanhoArquivo, arquivoPtr) != -1) {
-                quantidade++;
-                
-                *reservas = (Reserva**)realloc(*reservas, quantidade*sizeof(Reserva*));
 
+        // Se o arquivo não estiver vazio
+        if (c != EOF) {
+            // Retorna o ponteiro para a posição inicial
+            rewind(arquivoPtr);
+
+            // Obtém as reservas e armazena-as no array 
+            while(getline(&arquivo, &tamanhoArquivo, arquivoPtr) != -1) {
+                // Incrementa contador
+                quantidade++;
+
+                // Realoca array de reservas
+                *reservas = (Reserva**)realloc(*reservas, quantidade*sizeof(Reserva*));
                 Reserva *reserva = (*reservas)[quantidade-1] = (Reserva*)calloc(1, sizeof(Reserva));
 
+                // Armazena memória para os campos de cada reserva
                 reserva->nome = calloc(50, sizeof(char));
                 reserva->sobrenome = calloc(50, sizeof(char));
                 reserva->cpf = calloc(15, sizeof(char));
                 reserva->assento = calloc(10, sizeof(char));
 
+                // Por meio do strtok, separa as informações obtidas e armazena-as nos campos da struct "reserva"
                 strcpy(reserva->nome, strtok(arquivo, ","));
                 strcpy(reserva->sobrenome, strtok(NULL, ","));
                 strcpy(reserva->cpf, strtok(NULL, ","));
                 strcpy(reserva->assento, strtok(NULL, ","));
                 reserva->classe = atoi(strtok(NULL, ","));
 
+                // Realoca o espaço de memória para os campos de cada struct "reserva" de acordo com o tamanho da string, para evitar uso desnecessário de memória
                 reserva->nome = realloc(reserva->nome, (strlen(reserva->nome)+1)*sizeof(char));
                 reserva->sobrenome = realloc(reserva->sobrenome, (strlen(reserva->sobrenome)+1)*sizeof(char));
                 reserva->assento = realloc(reserva->assento, (strlen(reserva->assento)+1)*sizeof(char));
             }
         }
-        fclose(arquivoPtr);
+    } 
+    // Caso o arquivo não exista, cria um novo
+    else {
+        if((arquivoPtr = (FILE*)fopen("./reservas.txt", "w")) == NULL) {
+            printf("Erro ao abrir o arquivo\n");
+            exit(1);
+        }
     }
+
+    // Fecha o arquivo
+    fclose(arquivoPtr);
 }
 
+/*
+    Objetivo: salvar as informações do array de Reservas no arquivo "reservas.txt"
+    Parâmetros: endereço da struct Voo, endereço do array de Reservas
+*/
 void salvarReservas(Voo *voo, Reserva **reservas) {
-    FILE *arquivoPtr;
-
+    // Variável para percorrer o array de reservas
     int pos=0;
 
+    // Abre o arquivo "reservas.txt" no modo escrita
+    FILE *arquivoPtr;
     if((arquivoPtr = fopen("./reservas.txt", "w")) != NULL) {
+
+        // Armazena as informações de cada reserva e separando-as por ",". Na última, imprime um "\n" para a próxima reserva
         while(pos < voo->assentosOcupados) {
             Reserva *reserva = reservas[pos];
             
-            fprintf(arquivoPtr, reserva->nome); fprintf(arquivoPtr, ",");
-            fprintf(arquivoPtr, reserva->sobrenome); fprintf(arquivoPtr, ",");
-            fprintf(arquivoPtr, reserva->cpf); fprintf(arquivoPtr, ",");
-            fprintf(arquivoPtr, reserva->assento); fprintf(arquivoPtr, ",");
+            fprintf(arquivoPtr,"%s",  reserva->nome); fprintf(arquivoPtr, ",");
+            fprintf(arquivoPtr,"%s",  reserva->sobrenome); fprintf(arquivoPtr, ",");
+            fprintf(arquivoPtr,"%s",  reserva->cpf); fprintf(arquivoPtr, ",");
+            fprintf(arquivoPtr,"%s",  reserva->assento); fprintf(arquivoPtr, ",");
             fprintf(arquivoPtr, "%d", reserva->classe); fprintf(arquivoPtr, "\n");
-           
             pos++;
         }
+
+        // Fecha o arquivo
         fclose(arquivoPtr);
+    } 
+    // Caso o arquivo não exista, alerta erro
+    else {
+        printf("Erro ao abrir arquivo");
+        exit(1);
     }
 }
 
+/* 
+    Objetivo: Estratégia para o algoritmo: primeiro ler todas as reservas e atribuir em um array de reservas, além de as informações 
+    gerais do Voo em uma struct. Então realizar as operações mudando os valores do array de reservas e da struct do Voo.
+    No final, alterados os dois, para o fechamento do dia ou o fechamento do voo, salvar essas informações no arquivo de texto.
+*/
 int main(void) {
+    // Cria um voo e um vetor de reservas
     Voo voo;
     Reserva **reservas = NULL;
 
+    // Lê as informações do voo e das reservas
     lerVoo(&voo);
-    lerReservas(&reservas);
-    char comando[3] = "";
+    lerReservas(&reservas); 
 
+    // Obtém e executa comandos até Fechamento do Dia ou Fechamento do Voo
+    char comando[3] = "";
     while(strcmp(comando, "FD") && strcmp(comando, "FV")) {
+        // Recebe o comando: (AV, RR, CR, MR, CA, FD, FV)
         scanf(" %s", comando);
 
+        // Comando de "Abertura do Voo" pode ser executado após fechamento do voo, por isso é verificado antes
         if(!strcmp(comando, "AV")) {
             aberturaVoo(&voo, &reservas);
         } 
         else {
+            // Caso o voo já esteja fechado, termina de ler o comando e imprime informações relativas ao voo, sem executar novos comandos
             if(voo.status) {
                 int c;
                 while ((c = getchar()) != '\n' && c != EOF) { }
                 fechamentoVoo(&voo, &reservas);
             }
+            // Caso contrário, chama a função correspondente a cada comando enviando "voo" e "reservas" por referência
             else {
                 if(!strcmp(comando, "RR")) {
                     realizarReserva(&voo, &reservas);
@@ -334,9 +552,11 @@ int main(void) {
         }
     }
 
+    // Armazena as informações do voo e das reservas nos arquivos 'voo.txt' e 'reservas.txt, respectivamente
     salvarVoo(&voo);
     salvarReservas(&voo, reservas);
 
+    // Libera a memória alocada
     for(int i=0; i<voo.assentosOcupados; i++) {
         free(&(reservas[i]->nome));
         free(&(reservas[i]->sobrenome));

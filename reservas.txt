@@ -1,2 +1,0 @@
-Bernardo,Rodrigues,000.000.000-00,A100,0
-Ana,Clara,111.111.111-11,A101,0
