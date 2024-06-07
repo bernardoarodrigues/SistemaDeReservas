@@ -1,11 +1,11 @@
 /*
     Autores: 
-        - Bernardo Alexandre Alves Rodrigues - 15442936
-        - Gabriel Campanelli Iamato - N°USP: 15452920
-        - Gabriel Phelippe Prado - 15453730
+        - Bernardo Alexandre Alves Rodrigues - N° USP: 15442936
+        - Gabriel Campanelli Iamato - N° USP: 15452920
+        - Gabriel Phelippe Prado - N° USP: 15453730
 */
 
-// Defines
+// Define (habilita getline() para std=c99)
 #define _GNU_SOURCE
 
 // Bibliotecas
@@ -62,7 +62,6 @@ void lerVoo(Voo *voo);
 void salvarVoo(Voo *voo);
 void lerReservas(Reserva*** reservas);
 void salvarReservas(Voo *voo, Reserva** reservas);
-void calculaValortotal(Voo *voo, Reserva ***reservas);
 
 /*
     Objetivo: realizar a abertura de um voo, armazenando em uma struct Voo
@@ -136,7 +135,6 @@ void realizarReserva(Voo *voo, Reserva ***reservas) {
         voo->dia = atoi(strtok(NULL, " "));
         voo->mes = atoi(strtok(NULL, " "));
         voo->ano = atoi(strtok(NULL, " "));
-
         strcpy(voo->idVoo, strtok(NULL, " "));
     }
     // Caso contrário, ignora-os
@@ -235,6 +233,7 @@ void modificarReserva(Voo *voo, Reserva ***reservas) {
     printf("Reserva Modificada:\n%s\n%s %s\n%d/%d/%d\nVoo: %s\nAssento: %s\n", (*reservas)[pos]->cpf, (*reservas)[pos]->nome, (*reservas)[pos]->sobrenome, (voo->dia), (voo->mes), (voo->ano), voo->idVoo, (*reservas)[pos]->assento);
     if((*reservas)[pos]->classe) printf("Classe: executiva\n"); else printf("Classe: economica\n");
     printf("Trecho: %s %s\nValor: %.2f\n", voo->origem, voo->destino, (*reservas)[pos]->classe ? voo->valorExecutiva : voo->valorEconomica);
+    printf(LINHA);
 }
 
 /*
@@ -274,7 +273,6 @@ void cancelarReserva(Voo *voo, Reserva ***reservas) {
     Parâmetros: endereço da struct Voo, endereço do array de Reservas
 */
 void fechamentoDia(Voo *voo) {
-    printf(LINHA);
     printf("Fechamento do dia:\n");
     printf("Quantidade de reservas: %d\n", voo->assentosOcupados);
     printf("Posicao: %.2f\n", voo->valorTotal);
@@ -360,14 +358,17 @@ void lerVoo(Voo *voo) {
     } 
     // Caso o arquivo não exista, cria um novo e define as informações iniciais
     else {
-        if((arquivoPtr = (FILE*)fopen("./voo.txt", "w")) != NULL) {
-            voo->idVoo = calloc(5, sizeof(char));
-            voo->origem = calloc(4, sizeof(char));
-            voo->destino = calloc(4, sizeof(char));
-            strcpy(voo->idVoo, "-"); strcpy(voo->origem, "-"); strcpy(voo->destino, "-");
-            voo->assentosTotais=-1; voo->assentosOcupados=-1; voo->dia=-1; voo->mes=-1; voo->ano=-1; voo->status=-1;
-            voo->valorEconomica=-1.0; voo->valorExecutiva=-1.0; voo->valorTotal=-1.0;
-        }
+        if((arquivoPtr = (FILE*)fopen("./voo.txt", "w")) == NULL) {
+            printf("Erro ao criar o arquivo voo.txt\n");
+            exit(1);
+        } 
+
+        voo->idVoo = calloc(5, sizeof(char));
+        voo->origem = calloc(4, sizeof(char));
+        voo->destino = calloc(4, sizeof(char));
+        strcpy(voo->idVoo, "-"); strcpy(voo->origem, "-"); strcpy(voo->destino, "-");
+        voo->assentosTotais=-1; voo->assentosOcupados=-1; voo->dia=-1; voo->mes=-1; voo->ano=-1; voo->status=-1;
+        voo->valorEconomica=-1.0; voo->valorExecutiva=-1.0; voo->valorTotal=-1.0;
     }
 }
 
@@ -400,7 +401,7 @@ void salvarVoo(Voo *voo) {
     } 
     // Caso o arquivo não exista, alerta erro
     else {
-        printf("Erro ao abrir arquivo");
+        printf("Erro ao abrir o arquivo voo.txt\n");
         exit(1);
     }
 }
@@ -459,7 +460,7 @@ void lerReservas(Reserva ***reservas) {
     // Caso o arquivo não exista, cria um novo
     else {
         if((arquivoPtr = (FILE*)fopen("./reservas.txt", "w")) == NULL) {
-            printf("Erro ao abrir o arquivo\n");
+            printf("Erro ao criar o arquivo reservas.txt\n");
             exit(1);
         }
     }
@@ -497,15 +498,15 @@ void salvarReservas(Voo *voo, Reserva **reservas) {
     } 
     // Caso o arquivo não exista, alerta erro
     else {
-        printf("Erro ao abrir arquivo");
+        printf("Erro ao abrir o arquivo reservas.txt\n");
         exit(1);
     }
 }
 
 /* 
-    Objetivo: Estratégia para o algoritmo: primeiro ler todas as reservas e atribuir em um array de reservas, além de as informações 
-    gerais do Voo em uma struct. Então realizar as operações mudando os valores do array de reservas e da struct do Voo.
-    No final, alterados os dois, para o fechamento do dia ou o fechamento do voo, salvar essas informações no arquivo de texto.
+    Objetivo: Ler informações gerais do voo e armazená-las em uma struct e ler as informações das reservas e armazená-las em um array.
+    Após isso, realizar as operações ditadas pelos comandos mudando os valores da struct do voo e do array de reservas.
+    Ao realizar o fechamento do dia ou o fechamento do voo, salvar essas informações em arquivos de texto.
 */
 int main(void) {
     // Cria um voo e um vetor de reservas
@@ -527,13 +528,13 @@ int main(void) {
             aberturaVoo(&voo, &reservas);
         } 
         else {
-            // Caso o voo já esteja fechado, termina de ler o comando e imprime informações relativas ao voo, sem executar novos comandos
+            // Caso o voo já esteja fechado, termina de ler os parâmetros e imprime informações relativas ao voo, sem executar o comando
             if(voo.status) {
                 int c;
                 while ((c = getchar()) != '\n' && c != EOF) { }
                 fechamentoVoo(&voo, &reservas);
             }
-            // Caso contrário, chama a função correspondente a cada comando enviando "voo" e "reservas" por referência
+            // Caso contrário, executa a função correspondente a cada comando passando "voo" e "reservas" por referência
             else {
                 if(!strcmp(comando, "RR")) {
                     realizarReserva(&voo, &reservas);
@@ -552,7 +553,7 @@ int main(void) {
         }
     }
 
-    // Armazena as informações do voo e das reservas nos arquivos 'voo.txt' e 'reservas.txt, respectivamente
+    // Armazena as informações do voo e das reservas nos arquivos "voo.txt" e "reservas.txt", respectivamente
     salvarVoo(&voo);
     salvarReservas(&voo, reservas);
 
