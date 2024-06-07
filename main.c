@@ -288,7 +288,6 @@ void fechamentoVoo(Voo *voo, Reserva ***reservas) {
     voo->status=1;
 
     // Imprime informações
-    printf(LINHA);
     printf("Voo Fechado!\n\n");
     for(int i=0; i<voo->assentosOcupados; i++) {
         printf("%s\n%s %s\n%s\n\n", (*reservas)[i]->cpf, (*reservas)[i]->nome, (*reservas)[i]->sobrenome, (*reservas)[i]->assento);
