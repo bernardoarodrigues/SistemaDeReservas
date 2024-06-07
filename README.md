@@ -15,7 +15,7 @@ Desenvolver um sistema de reserva de passagens, que possui uma série de funcion
  - **Turma:** BCC-A / 2024 
 
 ## Utilização
-Para utilizar o programa, basta compilar o arquivo `main.c` pelo comando `gcc main.c -o main -Wall -std=c99` e executar o arquivo gerado com o comando `./main`.
+Para utilizar o programa, basta compilar o arquivo `main.c` com o comando `gcc main.c -o main -Wall -std=c99` e executar o arquivo gerado `./main`.
 
 ## Licença
 Esse projeto está licenciado sobre a GNU General Public License V3.0, publicada pela Free Software Foundation.
