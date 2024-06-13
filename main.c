@@ -516,38 +516,47 @@ int main(void) {
     lerVoo(&voo);
     lerReservas(&reservas); 
 
+    // Caso o voo já esteja fechado, imprime informações relativas ao voo
+    if(voo.status == 1) {
+        fechamentoVoo(&voo, &reservas);
+    }
+
     // Obtém e executa comandos até Fechamento do Dia ou Fechamento do Voo
     char comando[3] = "";
-    while(strcmp(comando, "FD") && strcmp(comando, "FV")) {
+    while(strcmp(comando, "FV")) {
         // Recebe o comando: (AV, RR, CR, MR, CA, FD, FV)
         scanf(" %s", comando);
 
-        // Comando de "Abertura do Voo" pode ser executado após fechamento do voo, por isso é verificado antes
-        if(!strcmp(comando, "AV")) {
-            aberturaVoo(&voo, &reservas);
-        } 
-        else {
-            // Caso o voo já esteja fechado, termina de ler os parâmetros e imprime informações relativas ao voo, sem executar o comando
-            if(voo.status) {
-                int c;
-                while ((c = getchar()) != '\n' && c != EOF) { }
-                fechamentoVoo(&voo, &reservas);
+        // Caso o voo esteja fechado, libera execução somente de "CR" e "FV"
+        if(voo.status == 1) { 
+            if(!strcmp(comando, "CR")) {
+                consultarReserva(&voo, &reservas);
             }
-            // Caso contrário, executa a função correspondente a cada comando passando "voo" e "reservas" por referência
-            else {
-                if(!strcmp(comando, "RR")) {
-                    realizarReserva(&voo, &reservas);
-                } else if(!strcmp(comando, "CR")) {
-                    consultarReserva(&voo, &reservas);
-                } else if(!strcmp(comando, "MR")) {
-                    modificarReserva(&voo, &reservas);
-                } else if(!strcmp(comando, "CA")) {
-                    cancelarReserva(&voo, &reservas);
-                } else if(!strcmp(comando, "FD")) {
-                    fechamentoDia(&voo);
-                } else if(!strcmp(comando, "FV")) {
-                    fechamentoVoo(&voo, &reservas);
-                }
+            else if(!strcmp(comando, "FV")) {
+                fechamentoVoo(&voo, &reservas);
+            } else {
+                // Termina de ler os parâmetros do comando inválido
+                int c;
+                while ((c = getchar()) != '\n' && c != EOF) {}
+            }
+        } 
+        // Caso o voo esteja aberto, libera a execução dos seguintes comandos 
+        else {
+            if(!strcmp(comando, "AV")) {
+                aberturaVoo(&voo, &reservas);
+            } else if(!strcmp(comando, "CR")) {
+                consultarReserva(&voo, &reservas);
+            } else if(!strcmp(comando, "RR")) {
+                realizarReserva(&voo, &reservas);
+            } else if(!strcmp(comando, "MR")) {
+                modificarReserva(&voo, &reservas);
+            } else if(!strcmp(comando, "CA")) {
+                cancelarReserva(&voo, &reservas);
+            } else if(!strcmp(comando, "FD")) {
+                fechamentoDia(&voo);
+                break;
+            } else if(!strcmp(comando, "FV")) {
+                fechamentoVoo(&voo, &reservas);
             }
         }
     }
@@ -558,11 +567,11 @@ int main(void) {
 
     // Libera a memória alocada
     for(int i=0; i<voo.assentosOcupados; i++) {
-        free(&(reservas[i]->nome));
-        free(&(reservas[i]->sobrenome));
-        free(&(reservas[i]->cpf));
-        free(&(reservas[i]->assento));
-        free(&(reservas[i]));
+        free(reservas[i]->nome);
+        free(reservas[i]->sobrenome);
+        free(reservas[i]->cpf);
+        free(reservas[i]->assento);
+        free(reservas[i]);
     }
     free(reservas);
     free(voo.idVoo); free(voo.origem); free(voo.destino);
