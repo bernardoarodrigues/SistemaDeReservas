@@ -7,6 +7,9 @@
 
 // Define (habilita getline() para std=c99)
 // Obs.: optamos pelo getline() para não precisar de especificar um tamanho limite de caracteres ao ler a entrada do usuário ou os arquivos salvos
+// Sintaxe: getline(char **restrict bufferSaida, size_t *restrict quantidadeDeCaracteres, FILE *restrict bufferEntrada);
+// A função basicamente lê o buffer de entrada (stdin ou ponteiro para arquivo, no caso desse programa), caractere por caractere, até a quebra de linha (\n) ou fim do arquivo (EOF).
+// Além disso, ela armazena os caracteres lidos em um buffer de saída, que é realocado a cada novo caractere.
 #define _GNU_SOURCE
 
 // Bibliotecas
