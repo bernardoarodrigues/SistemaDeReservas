@@ -157,7 +157,7 @@ void realizarReserva(Voo *voo, Reserva ***reservas) {
     // Recebe os valores de assento e classe e atualiza o valor total obtido
     strcpy(reserva->assento, strtok(NULL, " "));
     if(!strcmp(strtok(NULL, " "), "economica")) {
-        reserva->classe=0;
+        reserva->classe = 0;
         voo->valorTotal += voo->valorEconomica;
     }
     else {
@@ -205,9 +205,9 @@ void consultarReserva(Voo *voo, Reserva ***reservas) {
             printf("%d\n", voo->ano);
             printf("Voo: %s\n", voo->idVoo);
             printf("Assento: %s\n", (*reservas)[i]->assento);
-            printf("Classe: %s\n", (*reservas)[i]->classe ? "economica" : "executiva");
+            printf("Classe: %s\n", (*reservas)[i]->classe ? "executiva" : "economica");
             printf("Trecho: %s %s\n", voo->origem, voo->destino);
-            printf("Valor: %.2f\n", (*reservas)[i]->classe ? voo->valorEconomica : voo->valorExecutiva);
+            printf("Valor: %.2f\n", (*reservas)[i]->classe ? voo->valorExecutiva : voo->valorEconomica);
             printf(LINHA);
             break;
         }
@@ -242,7 +242,7 @@ void modificarReserva(Voo *voo, Reserva ***reservas) {
 
     // Imprime as informações da reserva modificada
     printf("Reserva Modificada:\n%s\n%s %s\n%d/%d/%d\nVoo: %s\nAssento: %s\n", (*reservas)[pos]->cpf, (*reservas)[pos]->nome, (*reservas)[pos]->sobrenome, (voo->dia), (voo->mes), (voo->ano), voo->idVoo, (*reservas)[pos]->assento);
-    if((*reservas)[pos]->classe) printf("Classe: executiva\n"); 
+    if((*reservas)[pos]->classe == 1) printf("Classe: executiva\n"); 
     else printf("Classe: economica\n");
     printf("Trecho: %s %s\nValor: %.2f\n", voo->origem, voo->destino, (*reservas)[pos]->classe ? voo->valorExecutiva : voo->valorEconomica);
     printf(LINHA);
@@ -473,10 +473,12 @@ void lerReservas(Reserva ***reservas) {
             }
         }
     } 
-    // Caso o arquivo não exista, alerta erro
+    // Caso o arquivo não exista, cria um novo
     else {
-        printf("Erro ao criar o arquivo reservas.txt\n");
-        exit(1);
+        if((arquivoPtr = (FILE*)fopen("./reservas.txt", "w")) == NULL) {
+            printf("Erro ao criar o arquivo reservas.txt\n");
+            exit(1);
+        }
     }
 
     // Fecha o arquivo
@@ -534,7 +536,7 @@ int main(void) {
 
     // Obtém e executa comandos até Fechamento do Dia ou Fechamento do Voo
     char comando[3] = "";
-    while(strcmp(comando, "FD") || strcmp(comando, "FV")) {
+    while(strcmp(comando, "FD") && strcmp(comando, "FV")) {
         // Recebe o comando: (AV, RR, CR, MR, CA, FD, FV)
         scanf(" %s", comando);
 
