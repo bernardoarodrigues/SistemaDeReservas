@@ -15,7 +15,7 @@ Desenvolver um sistema de reserva de passagens, que possui uma série de funcion
  - **Turma:** BCC-A / 2024 
 
 ## Utilização
-Para utilizar o programa, basta compilar o arquivo `main.c` com o comando `gcc main.c -o main -Wall -std=c99` e executar o arquivo gerado `./main`.
+Para utilizar o programa, basta compilar o arquivo `SistemaDeReservas.c` com o comando `gcc SistemaDeReservas.c -o SistemaDeReservas -Wall -std=c99` e executar o arquivo gerado `./SistemaDeReservas`.
 
 ## Caso de Teste
 ### Entrada 1
