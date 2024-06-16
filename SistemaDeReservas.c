@@ -226,11 +226,14 @@ void modificarReserva(Voo *voo, Reserva **reservas) {
     // Ignora espaço após o comando
     buffer++;
 
+    // Obtém CPF de consulta
+    char *cpf = strtok(buffer, " ");
+
     // Percorre o array de reservas
     int pos=0;
     for (; pos < voo->assentosOcupados; pos++) {
         // Caso tenha encontrado o CPF, modifica as informações da reserva
-        if(!strcmp(strtok(buffer, " "), (*reservas)[pos].cpf)) {
+        if(!strcmp(cpf, (*reservas)[pos].cpf)) {
             strcpy((*reservas)[pos].nome, strtok(NULL, " "));
             strcpy((*reservas)[pos].sobrenome, strtok(NULL, " "));
 	        strcpy((*reservas)[pos].cpf, strtok(NULL, " "));
@@ -571,6 +574,10 @@ int main(void) {
                 fechamentoDia(&voo);
             } else if(!strcmp(comando, "FV")) {
                 fechamentoVoo(&voo, &reservas);
+            } else {
+                // Termina de ler os parâmetros do comando inválido
+                int c;
+                while ((c = getchar()) != '\n' && c != EOF) {}
             }
         }
     }
