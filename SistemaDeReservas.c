@@ -268,7 +268,7 @@ void cancelarReserva(Voo *voo, Reserva **reservas) {
     }
     
     // Diminui do valor total do Voo o valor da reserva cancelada
-    voo->valorTotal -= (*reservas)[pos].classe ? voo->valorEconomica : voo->valorExecutiva;
+    voo->valorTotal -= (*reservas)[pos].classe ? voo->valorExecutiva : voo->valorEconomica;
     
     // Desloca as posições posteriores do array de reservas para a posição anterior, de forma a remover a reserva cancelada
     for(int j=pos; j<voo->assentosOcupados-1; j++){
