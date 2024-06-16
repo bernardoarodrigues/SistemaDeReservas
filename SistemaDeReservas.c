@@ -234,8 +234,14 @@ void modificarReserva(Voo *voo, Reserva **reservas) {
     for (; pos < voo->assentosOcupados; pos++) {
         // Caso tenha encontrado o CPF, modifica as informações da reserva
         if(!strcmp(cpf, (*reservas)[pos].cpf)) {
-            strcpy((*reservas)[pos].nome, strtok(NULL, " "));
-            strcpy((*reservas)[pos].sobrenome, strtok(NULL, " "));
+            // Obtém nome e sobrenome e realoca as respectivas strings, devido a uma possível mudança de tamanho
+            char *nome = strtok(NULL, " "), *sobrenome = strtok(NULL, " ");
+            (*reservas)[pos].nome = (char*) realloc((*reservas)[pos].nome, strlen(nome)+1);
+            (*reservas)[pos].sobrenome = (char*) realloc((*reservas)[pos].sobrenome, strlen(sobrenome)+1);
+
+            // Copia novas informações para as strings da reserva
+            strcpy((*reservas)[pos].nome, nome);
+            strcpy((*reservas)[pos].sobrenome, sobrenome);
 	        strcpy((*reservas)[pos].cpf, strtok(NULL, " "));
 	        strcpy((*reservas)[pos].assento, strtok(NULL, "\n"));
             break;
