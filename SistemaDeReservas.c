@@ -192,6 +192,11 @@ void realizarReserva(Voo *voo, Reserva **reservas) {
         strtok(NULL, " ");
         strtok(NULL, "\n");
     }
+
+    // Se a quantidade de assentos atingiu o limite, fecha o voo
+    if(voo->assentosOcupados == voo->assentosTotais) {
+        fechamentoVoo(voo, reservas);
+    }
 }
 
 /*
@@ -615,6 +620,9 @@ int main(void) {
                 consultarReserva(&voo, &reservas);
             } else if(!strcmp(comando, "RR")) {
                 realizarReserva(&voo, &reservas);
+
+                // Se a capacidade limite foi atingida, encerra o loop
+                if(voo.status == 1) break;
             } else if(!strcmp(comando, "MR")) {
                 modificarReserva(&voo, &reservas);
             } else if(!strcmp(comando, "CA")) {
