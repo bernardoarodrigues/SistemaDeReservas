@@ -131,15 +131,27 @@ void realizarReserva(Voo *voo, Reserva **reservas) {
     reserva->cpf = (char*) calloc(15, sizeof(char));
     reserva->assento = (char*) calloc(10, sizeof(char));
 
+    // Verifica se a memória foi alocada com sucesso
+    if(reserva->nome == NULL || reserva->sobrenome == NULL || reserva->cpf == NULL || reserva->assento == NULL) {
+        printf("Erro ao alocar memória (1)");
+        exit(1);
+    }
+
     // Obtém as informações do buffer e armazena nos campos da struct reserva
     strcpy(reserva->nome, strtok(buffer, " "));  
     strcpy(reserva->sobrenome, strtok(NULL, " "));
     strcpy(reserva->cpf, strtok(NULL, " "));
 
-    // Realoca memória utilizada nas strings de acordo com seu tamanho, para evitar uso desnecessário de memória
+    // Realoca memória utilizada nas strings de acordo com seu tamanho, para evitar uso desnecessário de memória. Tamanho do CPF não muda.
     reserva->nome = (char*) realloc(reserva->nome, (strlen(reserva->nome)+1)*sizeof(char));
     reserva->sobrenome = (char*) realloc(reserva->sobrenome, (strlen(reserva->sobrenome)+1)*sizeof(char));
     reserva->assento = (char*) realloc(reserva->assento, (strlen(reserva->assento)+1)*sizeof(char));
+
+    // Verifica se a memória foi alocada com sucesso
+    if(reserva->nome == NULL || reserva->sobrenome == NULL || reserva->assento == NULL) {
+        printf("Erro ao alocar memória (2)");
+        exit(1);
+    }
     
     // Altera os valores do dia, mês, ano e idVoo caso ainda não tenham sido obtidos
     if(voo->dia==-1){
@@ -235,15 +247,22 @@ void modificarReserva(Voo *voo, Reserva **reservas) {
         // Caso tenha encontrado o CPF, modifica as informações da reserva
         if(!strcmp(cpf, (*reservas)[pos].cpf)) {
             // Obtém nome e sobrenome e realoca as respectivas strings, devido a uma possível mudança de tamanho
-            char *nome = strtok(NULL, " "), *sobrenome = strtok(NULL, " ");
+            char *nome = strtok(NULL, " "), *sobrenome = strtok(NULL, " "), *cpf = strtok(NULL, " "), *assento = strtok(NULL, "\n");
             (*reservas)[pos].nome = (char*) realloc((*reservas)[pos].nome, strlen(nome)+1);
             (*reservas)[pos].sobrenome = (char*) realloc((*reservas)[pos].sobrenome, strlen(sobrenome)+1);
+            (*reservas)[pos].assento = (char*) realloc((*reservas)[pos].assento, strlen(assento)+1);
+
+            // Verifica se a memória foi alocada com sucesso
+            if((*reservas)[pos].nome == NULL || (*reservas)[pos].sobrenome == NULL || (*reservas)[pos].assento == NULL) {
+                printf("Erro ao alocar memória (3)");
+                exit(1);
+            }
 
             // Copia novas informações para as strings da reserva
             strcpy((*reservas)[pos].nome, nome);
             strcpy((*reservas)[pos].sobrenome, sobrenome);
-	        strcpy((*reservas)[pos].cpf, strtok(NULL, " "));
-	        strcpy((*reservas)[pos].assento, strtok(NULL, "\n"));
+	        strcpy((*reservas)[pos].cpf, cpf);
+	        strcpy((*reservas)[pos].assento, assento);
             break;
         }
     }
@@ -286,6 +305,12 @@ void cancelarReserva(Voo *voo, Reserva **reservas) {
 
     // Realoca o espaço para as reservas
     *reservas = (Reserva*) realloc(*reservas, voo->assentosOcupados*sizeof(Reserva));
+
+    // Verifica se a memória foi alocada com sucesso
+    if(*reservas == NULL) {
+        printf("Erro ao alocar memória (4)");
+        exit(1);
+    }
 }
 
 /*
@@ -326,6 +351,17 @@ void lerVoo(Voo *voo) {
     char *linha = NULL;
     size_t tamanhoLinha = 0;
 
+    // Aloca memória para strings
+    voo->idVoo = (char*) calloc(5, sizeof(char));
+    voo->origem = (char*) calloc(4, sizeof(char));
+    voo->destino = (char*) calloc(4, sizeof(char));
+
+    // Verifica se a memória foi alocada com sucesso
+    if(voo->idVoo == NULL || voo->origem == NULL || voo->destino == NULL) {
+        printf("Erro ao alocar memória (5)");
+        exit(1);
+    }
+
     // Abre o arquivo para leitura
     if((arquivoPtr = fopen("./voo.txt", "r")) != NULL) {
         // Obtém primeiro caractere do arquivo
@@ -337,9 +373,6 @@ void lerVoo(Voo *voo) {
         -1.0: para floats
         Obs.: valores de inicialização, que serão sobrescritos posteriormente */
         if (c == EOF) {
-            voo->idVoo = (char*) calloc(5, sizeof(char));
-            voo->origem = (char*) calloc(4, sizeof(char));
-            voo->destino = (char*) calloc(4, sizeof(char));
             strcpy(voo->idVoo, "-"); strcpy(voo->origem, "-"); strcpy(voo->destino, "-");
             voo->assentosTotais=-1; voo->assentosOcupados=-1; voo->dia=-1; voo->mes=-1; voo->ano=-1; voo->status=-1;
             voo->valorEconomica=-1.0; voo->valorExecutiva=-1.0; voo->valorTotal=-1.0;
@@ -351,11 +384,6 @@ void lerVoo(Voo *voo) {
 
             // Obtém as informações do voo e armazena na struct Voo
             if(getline(&linha, &tamanhoLinha, arquivoPtr) != -1) {
-                // Aloca memória para strings
-                voo->idVoo = (char*) calloc(5, sizeof(char));
-                voo->origem = (char*) calloc(4, sizeof(char));
-                voo->destino = (char*) calloc(4, sizeof(char));
-
                 // Obtém as informações separadas por ","
                 strcpy(voo->idVoo, strtok(linha, ","));
                 strcpy(voo->origem, strtok(NULL, ","));
@@ -387,9 +415,6 @@ void lerVoo(Voo *voo) {
         -1: para inteiros
         -1.0: para floats
         Obs.: valores de inicialização, que serão sobrescritos posteriormente */
-        voo->idVoo = (char*) calloc(5, sizeof(char));
-        voo->origem = (char*) calloc(4, sizeof(char));
-        voo->destino = (char*) calloc(4, sizeof(char));
         strcpy(voo->idVoo, "-"); strcpy(voo->origem, "-"); strcpy(voo->destino, "-");
         voo->assentosTotais=-1; voo->assentosOcupados=-1; voo->dia=-1; voo->mes=-1; voo->ano=-1; voo->status=-1;
         voo->valorEconomica=-1.0; voo->valorExecutiva=-1.0; voo->valorTotal=-1.0;
@@ -460,14 +485,26 @@ void lerReservas(Reserva **reservas) {
                 // Realoca array de reservas
                 *reservas = (Reserva*) realloc(*reservas, quantidade*sizeof(Reserva));
 
+                // Verifica se a memória foi alocada com sucesso
+                if(*reservas == NULL) {
+                    printf("Erro ao alocar memória (6)");
+                    exit(1);
+                }
+
                 // Obtém endereço da reserva atual 
                 Reserva *reserva = &(*reservas)[quantidade-1];
 
-                // Armazena memória para as strings da reserva
+                // Aloca memória para as strings da reserva
                 reserva->nome = (char*) calloc(50, sizeof(char));
                 reserva->sobrenome = (char*) calloc(50, sizeof(char));
                 reserva->cpf = (char*) calloc(15, sizeof(char));
                 reserva->assento = (char*) calloc(10, sizeof(char));
+
+                // Verifica se a memória foi alocada com sucesso
+                if(reserva->nome == NULL || reserva->sobrenome == NULL || reserva->cpf == NULL || reserva->assento == NULL) {
+                    printf("Erro ao alocar memória (7)");
+                    exit(1);
+                }
 
                 // Por meio do strtok, separa as informações obtidas e armazena-as nos campos da struct reserva
                 strcpy(reserva->nome, strtok(arquivo, ","));
@@ -480,6 +517,12 @@ void lerReservas(Reserva **reservas) {
                 reserva->nome = (char*) realloc(reserva->nome, (strlen(reserva->nome)+1)*sizeof(char));
                 reserva->sobrenome = (char*) realloc(reserva->sobrenome, (strlen(reserva->sobrenome)+1)*sizeof(char));
                 reserva->assento = (char*) realloc(reserva->assento, (strlen(reserva->assento)+1)*sizeof(char));
+
+                // Verifica se a memória foi alocada com sucesso
+                if(reserva->nome == NULL || reserva->sobrenome == NULL || reserva->assento == NULL) {
+                    printf("Erro ao alocar memória (8)");
+                    exit(1);
+                }
             }
         }
     } 
