@@ -9,7 +9,7 @@ Desenvolver um sistema de reserva de passagens, que possui uma série de funcion
  - [Gabriel Campanelli Iamato](mailto:gabriel.c.iamato@usp.br)
 
 ## Informações
- - **Disciplina:** Introdução à Ciência da Computação 1
+ - **Disciplina:** Introdução à Ciência da Computação 1 (ICC 1)
  - **Professor:** Rudinei Goularte
  - **Curso:** Bacharelado em Ciência da Computação
  - **Turma:** BCC-A / 2024 
